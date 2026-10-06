@@ -229,7 +229,7 @@
 				}
 			},
 			{
-				"name": "Update Failed status_copy1",
+				"name": "Update Success Status",
 				"type": "Script",
 				"dependsOn": [
 					{
@@ -256,7 +256,7 @@
 						{
 							"type": "Query",
 							"text": {
-								"value": "UPDATE ctrl.audit_log\nSET status='SUCCESS',end_time=SYSUTCDATETIME(),records_written=@{activity('Bronze_to_Silver').output.runOutput}\nwhere adf_run_id='@{pipeline().parameters.adf_run_id}' and table_id=@{pipeline().parameters.table_id};",
+								"value": "UPDATE ctrl.audit_log\nSET status='SUCCESS',end_time=SYSUTCDATETIME(),\n        records_written=@{activity('Bronze_to_Silver').output.runOutput}\nwhere adf_run_id='@{pipeline().parameters.adf_run_id}' and table_id=@{pipeline().parameters.table_id};",
 								"type": "Expression"
 							}
 						}
