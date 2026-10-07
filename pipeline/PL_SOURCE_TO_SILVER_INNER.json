@@ -317,7 +317,7 @@
 				}
 			},
 			{
-				"name": "Check load typeand update watermark",
+				"name": "Checking Load Type and Update Watermark",
 				"type": "IfCondition",
 				"dependsOn": [
 					{
@@ -330,7 +330,7 @@
 				"userProperties": [],
 				"typeProperties": {
 					"expression": {
-						"value": "@not(equals(activity('Read Table Details').output.firstRow.load_type,'FULL'))",
+						"value": "@not(equals(activity('Read Table Details').output.firstRow.load_type,'Full'))",
 						"type": "Expression"
 					},
 					"ifTrueActivities": [
@@ -355,7 +355,7 @@
 									{
 										"type": "Query",
 										"text": {
-											"value": "@update ctrl.watermark set watermark_value=SYSUTCDATETIME() where table_id=@{pipeline().parameters.table_id}",
+											"value": "update ctrl.watermark set watermark_value=SYSUTCDATETIME() where table_id=@{pipeline().parameters.table_id}",
 											"type": "Expression"
 										}
 									}
