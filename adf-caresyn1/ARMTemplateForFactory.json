@@ -49,6 +49,107 @@
 	},
 	"resources": [
 		{
+			"name": "[concat(parameters('factoryName'), '/PL_MASTER')]",
+			"type": "Microsoft.DataFactory/factories/pipelines",
+			"apiVersion": "2018-06-01",
+			"properties": {
+				"activities": [
+					{
+						"name": "Source to Silver Postgres",
+						"description": "",
+						"type": "ExecutePipeline",
+						"dependsOn": [],
+						"policy": {
+							"secureInput": false
+						},
+						"userProperties": [],
+						"typeProperties": {
+							"pipeline": {
+								"referenceName": "PL_SOURCE_TO_SILVER_MAIN",
+								"type": "PipelineReference"
+							},
+							"waitOnCompletion": true,
+							"parameters": {
+								"source_system": "neon_postgres",
+								"adf_run_id": {
+									"value": "@pipeline().RunId",
+									"type": "Expression"
+								}
+							}
+						}
+					},
+					{
+						"name": "Source to Silver ADLS csv",
+						"description": "",
+						"type": "ExecutePipeline",
+						"dependsOn": [],
+						"policy": {
+							"secureInput": false
+						},
+						"userProperties": [],
+						"typeProperties": {
+							"pipeline": {
+								"referenceName": "PL_SOURCE_TO_SILVER_MAIN",
+								"type": "PipelineReference"
+							},
+							"waitOnCompletion": true,
+							"parameters": {
+								"source_system": "adls_csv",
+								"adf_run_id": {
+									"value": "@pipeline().RunId",
+									"type": "Expression"
+								}
+							}
+						}
+					},
+					{
+						"name": "Silver to Gold",
+						"description": "",
+						"type": "ExecutePipeline",
+						"dependsOn": [
+							{
+								"activity": "Source to Silver Postgres",
+								"dependencyConditions": [
+									"Completed"
+								]
+							},
+							{
+								"activity": "Source to Silver ADLS csv",
+								"dependencyConditions": [
+									"Completed"
+								]
+							}
+						],
+						"policy": {
+							"secureInput": false
+						},
+						"userProperties": [],
+						"typeProperties": {
+							"pipeline": {
+								"referenceName": "PL_SILVER_TO_GOLD",
+								"type": "PipelineReference"
+							},
+							"waitOnCompletion": true,
+							"parameters": {
+								"adf_run_id": {
+									"value": "@pipeline().RunId",
+									"type": "Expression"
+								}
+							}
+						}
+					}
+				],
+				"policy": {
+					"elapsedTimeMetric": {}
+				},
+				"annotations": []
+			},
+			"dependsOn": [
+				"[concat(variables('factoryId'), '/pipelines/PL_SOURCE_TO_SILVER_MAIN')]",
+				"[concat(variables('factoryId'), '/pipelines/PL_SILVER_TO_GOLD')]"
+			]
+		},
+		{
 			"name": "[concat(parameters('factoryName'), '/PL_SILVER_TO_GOLD')]",
 			"type": "Microsoft.DataFactory/factories/pipelines",
 			"apiVersion": "2018-06-01",
@@ -232,6 +333,23 @@
 											}
 										],
 										"scriptBlockExecutionTimeout": "02:00:00"
+									}
+								},
+								{
+									"name": "Update pipeline as failed",
+									"type": "Fail",
+									"dependsOn": [
+										{
+											"activity": "Silver to Gold",
+											"dependencyConditions": [
+												"Failed"
+											]
+										}
+									],
+									"userProperties": [],
+									"typeProperties": {
+										"message": "The Gold notebook failed",
+										"errorCode": "500"
 									}
 								}
 							]
@@ -1263,107 +1381,6 @@
 			},
 			"dependsOn": [
 				"[concat(variables('factoryId'), '/linkedServices/LS_AzureKeyVault1')]"
-			]
-		},
-		{
-			"name": "[concat(parameters('factoryName'), '/PL_MASTER')]",
-			"type": "Microsoft.DataFactory/factories/pipelines",
-			"apiVersion": "2018-06-01",
-			"properties": {
-				"activities": [
-					{
-						"name": "Source to Silver Postgres",
-						"description": "",
-						"type": "ExecutePipeline",
-						"dependsOn": [],
-						"policy": {
-							"secureInput": false
-						},
-						"userProperties": [],
-						"typeProperties": {
-							"pipeline": {
-								"referenceName": "PL_SOURCE_TO_SILVER_MAIN",
-								"type": "PipelineReference"
-							},
-							"waitOnCompletion": true,
-							"parameters": {
-								"source_system": "neon_postgres",
-								"adf_run_id": {
-									"value": "@pipeline().RunId",
-									"type": "Expression"
-								}
-							}
-						}
-					},
-					{
-						"name": "Source to Silver ADLS csv",
-						"description": "",
-						"type": "ExecutePipeline",
-						"dependsOn": [],
-						"policy": {
-							"secureInput": false
-						},
-						"userProperties": [],
-						"typeProperties": {
-							"pipeline": {
-								"referenceName": "PL_SOURCE_TO_SILVER_MAIN",
-								"type": "PipelineReference"
-							},
-							"waitOnCompletion": true,
-							"parameters": {
-								"source_system": "adls_csv",
-								"adf_run_id": {
-									"value": "@pipeline().RunId",
-									"type": "Expression"
-								}
-							}
-						}
-					},
-					{
-						"name": "Silver to Gold",
-						"description": "",
-						"type": "ExecutePipeline",
-						"dependsOn": [
-							{
-								"activity": "Source to Silver Postgres",
-								"dependencyConditions": [
-									"Completed"
-								]
-							},
-							{
-								"activity": "Source to Silver ADLS csv",
-								"dependencyConditions": [
-									"Completed"
-								]
-							}
-						],
-						"policy": {
-							"secureInput": false
-						},
-						"userProperties": [],
-						"typeProperties": {
-							"pipeline": {
-								"referenceName": "PL_SILVER_TO_GOLD",
-								"type": "PipelineReference"
-							},
-							"waitOnCompletion": true,
-							"parameters": {
-								"adf_run_id": {
-									"value": "@pipeline().RunId",
-									"type": "Expression"
-								}
-							}
-						}
-					}
-				],
-				"policy": {
-					"elapsedTimeMetric": {}
-				},
-				"annotations": []
-			},
-			"dependsOn": [
-				"[concat(variables('factoryId'), '/pipelines/PL_SOURCE_TO_SILVER_MAIN')]",
-				"[concat(variables('factoryId'), '/pipelines/PL_SILVER_TO_GOLD')]"
 			]
 		}
 	]
