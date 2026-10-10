@@ -1,0 +1,12 @@
+{
+	"name": "adf-caresyn1",
+	"properties": {
+		"globalParameters": {
+			"email_receipent": {
+				"type": "string",
+				"value": "jhawarpriti29@gmail.com"
+			}
+		}
+	},
+	"location": "northcentralus"
+}
